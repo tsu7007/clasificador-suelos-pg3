@@ -317,6 +317,11 @@
             color: var(--color-orange-500);
         }
 
+        .badge-inadecuado {
+            background: rgba(192, 21, 47, 0.15);
+            color: var(--color-red-500);
+        }
+
         .empty-state {
             text-align: center;
             padding: 40px 20px;
@@ -557,7 +562,9 @@
                 clasif2 = 'Marginal';
             }
 
+            // Orden de clasificación: 0=Seleccionado (mejor), 4=Inadecuado (peor)
             const orden = { 'Seleccionado': 0, 'Adecuado': 1, 'Tolerable': 2, 'Marginal': 3, 'Inadecuado': 4 };
+            // El PEOR resultado es el que tiene el número MÁS ALTO
             const peor = orden[clasif1] >= orden[clasif2] ? clasif1 : clasif2;
 
             return {
@@ -630,6 +637,18 @@
                             fill: true,
                             backgroundColor: 'rgba(168, 75, 47, 0.25)',
                             borderColor: 'rgba(168, 75, 47, 0.5)',
+                            borderWidth: 1.5,
+                            pointRadius: 0,
+                            showLine: true,
+                            tension: 0
+                        },
+                        // Zona INADECUADA
+                        {
+                            label: 'Inadecuados',
+                            data: [{x: 0, y: 10}, {x: 100, y: 80}, {x: 100, y: 51.1}, {x: 90, y: 51.1}, {x: 65, y: 32.9}, {x: 40, y: 14.6}, {x: 30, y: 10}, {x: 0, y: 10}],
+                            fill: true,
+                            backgroundColor: 'rgba(192, 21, 47, 0.15)',
+                            borderColor: 'rgba(192, 21, 47, 0.4)',
                             borderWidth: 1.5,
                             pointRadius: 0,
                             showLine: true,
