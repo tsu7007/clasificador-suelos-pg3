@@ -135,6 +135,12 @@
             gap: 15px;
         }
 
+        .form-row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+
         .button-group {
             display: flex;
             gap: 10px;
@@ -212,7 +218,7 @@
         .chart-container {
             position: relative;
             width: 100%;
-            height: 400px;
+            height: 450px;
             margin-top: 15px;
             border: 1px solid var(--color-border);
             border-radius: 6px;
@@ -295,12 +301,12 @@
             letter-spacing: 0.3px;
         }
 
-        .badge-selected {
+        .badge-seleccionado {
             background: rgba(33, 128, 141, 0.15);
             color: var(--color-primary);
         }
 
-        .badge-adequate {
+        .badge-adecuado {
             background: rgba(34, 197, 94, 0.15);
             color: #22c55e;
         }
@@ -335,6 +341,33 @@
             margin-bottom: 15px;
             line-height: 1.6;
         }
+
+        .sieve-group {
+            background: rgba(33, 128, 141, 0.03);
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .sieve-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .sieve-grid-5 {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+
+        .sieve-label {
+            font-size: 11px;
+            text-align: center;
+            margin-bottom: 4px;
+            font-weight: 500;
+            color: var(--color-text-primary);
+        }
     </style>
 </head>
 <body>
@@ -349,7 +382,7 @@
             <h2>📋 Datos del Suelo</h2>
             
             <div class="info-text">
-                Introduce los parámetros del suelo. Se evaluarán ambos métodos y se asignará la clasificación del peor resultado.
+                Introduce los parámetros del suelo. LP/IP se calcula automáticamente según lo que introduzcas.
             </div>
 
             <form id="suelo-form">
@@ -366,15 +399,24 @@
                             <input type="number" id="ll" placeholder="0" step="0.1" required>
                         </div>
                         <div>
-                            <label for="lp">LP (Límite Plástico %)</label>
-                            <input type="number" id="lp" placeholder="0" step="0.1" required>
+                            <label for="ip">IP (Índice Plasticidad %)</label>
+                            <input type="number" id="ip" placeholder="0 o dejar vacío" step="0.1">
                         </div>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="ip">IP (Índice Plasticidad %) - Calculado: LL - LP</label>
-                    <input type="number" id="ip" placeholder="Calculado automáticamente" readonly>
+                    <label>o LP (si prefieres introducir este)</label>
+                    <div class="form-row">
+                        <div>
+                            <label for="lp">LP (Límite Plástico %)</label>
+                            <input type="number" id="lp" placeholder="0 o dejar vacío" step="0.1">
+                        </div>
+                        <div>
+                            <label for="ipCalculado">IP (Calculado automáticamente)</label>
+                            <input type="number" id="ipCalculado" placeholder="Calculado" readonly>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -388,8 +430,31 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="finos">Finos (# 0,080 %)</label>
-                    <input type="number" id="finos" placeholder="0" step="0.1" required>
+                    <label>Análisis Granulométrico - Tamices</label>
+                    <div class="sieve-group">
+                        <div class="sieve-grid-5">
+                            <div>
+                                <div class="sieve-label"># 20</div>
+                                <input type="number" class="sieve-input" id="sieve-20" placeholder="%" step="0.1">
+                            </div>
+                            <div>
+                                <div class="sieve-label"># 10</div>
+                                <input type="number" class="sieve-input" id="sieve-10" placeholder="%" step="0.1">
+                            </div>
+                            <div>
+                                <div class="sieve-label"># 2</div>
+                                <input type="number" class="sieve-input" id="sieve-2" placeholder="%" step="0.1">
+                            </div>
+                            <div>
+                                <div class="sieve-label"># 0.4</div>
+                                <input type="number" class="sieve-input" id="sieve-04" placeholder="%" step="0.1">
+                            </div>
+                            <div>
+                                <div class="sieve-label"># 0.08 (Finos)</div>
+                                <input type="number" class="sieve-input" id="sieve-008" placeholder="%" step="0.1" required>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -417,7 +482,7 @@
                 <canvas id="grafica"></canvas>
             </div>
             <p style="font-size: 11px; color: var(--color-text-secondary); margin-top: 12px; text-align: center;">
-                Los puntos se marcan según LL e IP introducidos
+                Punto rojo = Suelo actual | Zonas coloreadas = Clasificación PG-3
             </p>
         </div>
     </div>
@@ -440,6 +505,11 @@
         const canvas = document.getElementById('grafica');
         const ctx = canvas.getContext('2d');
 
+        const llInput = document.getElementById('ll');
+        const ipInput = document.getElementById('ip');
+        const lpInput = document.getElementById('lp');
+        const ipCalculado = document.getElementById('ipCalculado');
+
         // Ajustar tamaño del canvas
         function resizeCanvas() {
             const container = canvas.parentElement;
@@ -451,41 +521,46 @@
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
-        // Calcular IP automáticamente
-        const llInput = document.getElementById('ll');
-        const lpInput = document.getElementById('lp');
-        const ipInput = document.getElementById('ip');
-
-        function calcularIP() {
+        // Cálculo bidireccional LP/IP
+        function calcularPlasticidad() {
             const ll = parseFloat(llInput.value) || 0;
-            const lp = parseFloat(lpInput.value) || 0;
-            const ip = ll - lp;
-            ipInput.value = ip >= 0 ? ip.toFixed(1) : '0';
+            const ip = parseFloat(ipInput.value);
+            const lp = parseFloat(lpInput.value);
+
+            if (!isNaN(ip) && ip >= 0) {
+                // Si introduzco IP, calculo LP
+                const lpCalculado = ll - ip;
+                lpInput.value = lpCalculado >= 0 ? lpCalculado.toFixed(1) : '';
+                ipCalculado.value = ip.toFixed(1);
+            } else if (!isNaN(lp) && lp >= 0) {
+                // Si introduzco LP, calculo IP
+                const ipCalculado2 = ll - lp;
+                ipCalculado.value = ipCalculado2 >= 0 ? ipCalculado2.toFixed(1) : '';
+                ipInput.value = '';
+            } else {
+                ipCalculado.value = '';
+                ipInput.value = '';
+                lpInput.value = '';
+            }
+
             dibujarGrafica();
         }
 
-        llInput.addEventListener('input', calcularIP);
-        lpInput.addEventListener('input', calcularIP);
+        llInput.addEventListener('input', calcularPlasticidad);
+        ipInput.addEventListener('input', calcularPlasticidad);
+        lpInput.addEventListener('input', calcularPlasticidad);
 
         // Clasificación según PG-3
         function clasificarSuelo(ll, lp, ip, mo, ss, finos, cbr) {
-            const limites = {
-                seleccionado: { mo: 0.2, ss: 0.2, finos: 25, ll: 30, ip: 10 },
-                adecuado: { mo: 1, ss: 0.2, finos: 35, ll: 40, ip: 4 },
-                tolerable: { mo: 2, ss: 1, finos: 50, ll: 65, ip: undefined },
-                marginal: { mo: 5, ss: undefined, finos: 50, ll: 90, ip: undefined },
-            };
-
-            // Método 1: Tabla de características
             let clasif1 = 'Inadecuado';
             
-            if (mo <= limites.seleccionado.mo && ss <= limites.seleccionado.ss && finos <= limites.seleccionado.finos && ll <= limites.seleccionado.ll && ip <= limites.seleccionado.ip) {
+            if (mo <= 0.2 && ss <= 0.2 && finos <= 25 && ll <= 30 && ip <= 10) {
                 clasif1 = 'Seleccionado';
-            } else if (mo <= limites.adecuado.mo && ss <= limites.adecuado.ss && finos <= limites.adecuado.finos && ll <= limites.adecuado.ll && (ll <= 30 || ip >= 4) && ll <= 40) {
+            } else if (mo <= 1 && ss <= 0.2 && finos <= 35 && ll <= 40 && (ll <= 30 || ip >= 4)) {
                 clasif1 = 'Adecuado';
-            } else if (mo <= limites.tolerable.mo && ss <= limites.tolerable.ss && finos <= limites.tolerable.finos && ll <= limites.tolerable.ll && (ll <= 40 || ip >= 0.73 * (ll - 20))) {
+            } else if (mo <= 2 && ss <= 1 && finos <= 50 && ll <= 65 && (ll <= 40 || ip >= 0.73 * (ll - 20))) {
                 clasif1 = 'Tolerable';
-            } else if (mo <= limites.marginal.mo && ll <= limites.marginal.ll && (ll <= 90 || ip <= 0.73 * (ll - 20))) {
+            } else if (mo <= 5 && ll <= 90 && (ll <= 90 || ip <= 0.73 * (ll - 20))) {
                 clasif1 = 'Marginal';
             }
 
@@ -503,26 +578,66 @@
                 clasif2 = 'Marginal';
             }
 
-            // Peor resultado
             const orden = { 'Seleccionado': 0, 'Adecuado': 1, 'Tolerable': 2, 'Marginal': 3, 'Inadecuado': 4 };
             const peor = orden[clasif1] >= orden[clasif2] ? clasif1 : clasif2;
 
             return {
                 clasificacion: peor,
                 metodo1: clasif1,
-                metodo2: clasif2,
-                enLinea: Math.abs(ip - lineA) < 1
+                metodo2: clasif2
             };
         }
 
-        // Dibujar gráfica de Casagrande
+        // Dibujar gráfica de Casagrande profesional
         function dibujarGrafica() {
             const width = canvas.width;
             const height = canvas.height;
-            const padding = 50;
+            const padding = 60;
+            const chartWidth = width - 2 * padding;
+            const chartHeight = height - 2 * padding;
 
+            // Fondo blanco
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, width, height);
+
+            // Escalas
+            const maxLL = 100;
+            const maxIP = 80;
+            const scaleX = chartWidth / maxLL;
+            const scaleY = chartHeight / maxIP;
+
+            // Dibujar zonas de colores (Seleccionado, Adecuado, Tolerable, Marginal)
+            // Zona Seleccionado (0-30 LL, 0-10 IP)
+            ctx.fillStyle = 'rgba(33, 128, 141, 0.12)';
+            ctx.fillRect(padding, height - padding - 10 * scaleY, 30 * scaleX, 10 * scaleY);
+
+            // Zona Adecuado (30-40 LL, 10-20 IP) y (0-30 LL, 10-20 IP)
+            ctx.fillStyle = 'rgba(34, 197, 94, 0.12)';
+            ctx.fillRect(padding, height - padding - 20 * scaleY, 40 * scaleX, 10 * scaleY);
+
+            // Zona Tolerable (40-65 LL, 20-50 IP)
+            ctx.fillStyle = 'rgba(234, 179, 8, 0.12)';
+            for (let ll = 30; ll <= 65; ll += 1) {
+                const lineAValue = 0.73 * (ll - 20);
+                const x = padding + ll * scaleX;
+                const yLine = height - padding - lineAValue * scaleY;
+                const yMax = height - padding - 50 * scaleY;
+                if (yLine >= yMax) {
+                    ctx.fillRect(x, yMax, scaleX, yLine - yMax);
+                }
+            }
+
+            // Zona Marginal (65-90 LL)
+            ctx.fillStyle = 'rgba(168, 75, 47, 0.12)';
+            for (let ll = 65; ll <= 90; ll += 1) {
+                const lineAValue = 0.73 * (ll - 20);
+                const x = padding + ll * scaleX;
+                const yLine = height - padding - lineAValue * scaleY;
+                const yMax = height - padding - 73 * scaleY;
+                if (yLine >= yMax) {
+                    ctx.fillRect(x, yMax, scaleX, yLine - yMax);
+                }
+            }
 
             // Ejes
             ctx.strokeStyle = '#333';
@@ -534,27 +649,9 @@
             ctx.lineTo(padding, height - padding);
             ctx.stroke();
 
-            // Escalas
-            const maxLL = 100;
-            const maxIP = 80;
-            const scaleX = (width - 2 * padding) / maxLL;
-            const scaleY = (height - 2 * padding) / maxIP;
-
-            // Etiquetas de ejes
-            ctx.fillStyle = '#333';
-            ctx.font = '12px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText('LL (Límite Líquido %)', width / 2, height - 10);
-            
-            ctx.save();
-            ctx.translate(15, height / 2);
-            ctx.rotate(-Math.PI / 2);
-            ctx.fillText('IP (Índice Plasticidad %)', 0, 0);
-            ctx.restore();
-
             // Línea A: IP = 0.73(LL - 20)
             ctx.strokeStyle = '#000';
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 2.5;
             ctx.beginPath();
             const ll1 = 20, ip1 = 0;
             const ll2 = 100, ip2 = 0.73 * (100 - 20);
@@ -562,43 +659,46 @@
             ctx.lineTo(padding + ll2 * scaleX, height - padding - ip2 * scaleY);
             ctx.stroke();
 
-            // Zonas de colores
-            const zonas = [
-                { name: 'Seleccionados', color: 'rgba(33, 128, 141, 0.15)', ll: [0, 30], ip: [0, 10] },
-                { name: 'Adecuados', color: 'rgba(34, 197, 94, 0.15)', ll: [0, 40], ip: [0, 20] },
-                { name: 'Tolerables', color: 'rgba(234, 179, 8, 0.15)', ll: [0, 65], ip: [0, 50] },
-                { name: 'Marginales', color: 'rgba(168, 75, 47, 0.15)', ll: [0, 90], ip: [0, 73] }
-            ];
+            // Etiquetas de ejes
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('LL (Límite Líquido %)', width / 2, height - 15);
+            
+            ctx.save();
+            ctx.translate(20, height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('IP (Índice Plasticidad %)', 0, 0);
+            ctx.restore();
 
-            // Graficar punto actual
-            const ll = parseFloat(document.getElementById('ll').value) || 0;
-            const ip = parseFloat(document.getElementById('ip').value) || 0;
-
-            if (ll > 0 && ip >= 0) {
-                ctx.fillStyle = '#d32f2f';
-                ctx.beginPath();
-                ctx.arc(padding + ll * scaleX, height - padding - ip * scaleY, 6, 0, 2 * Math.PI);
-                ctx.fill();
-                ctx.strokeStyle = '#8b0000';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-            }
+            // Etiquetas de zonas
+            ctx.font = '11px Arial';
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+            ctx.textAlign = 'center';
+            ctx.fillText('Seleccionados', padding + 15 * scaleX, height - padding - 5 * scaleY);
+            ctx.fillText('Adecuados', padding + 20 * scaleX, height - padding - 15 * scaleY);
+            ctx.fillText('Tolerables', padding + 50 * scaleX, height - padding - 25 * scaleY);
+            ctx.fillText('Marginales', padding + 77 * scaleX, height - padding - 30 * scaleY);
 
             // Líneas de grid
             ctx.strokeStyle = '#ddd';
             ctx.lineWidth = 1;
+            ctx.font = '10px Arial';
+            ctx.fillStyle = '#666';
+            ctx.textAlign = 'center';
+
             for (let i = 0; i <= 10; i++) {
                 const x = padding + (i * 10) * scaleX;
                 const y = height - padding - (i * 10) * scaleY;
+
+                // Marcas eje X
                 ctx.beginPath();
                 ctx.moveTo(x, height - padding);
                 ctx.lineTo(x, height - padding + 5);
                 ctx.stroke();
-                ctx.fillStyle = '#666';
-                ctx.font = '10px Arial';
-                ctx.textAlign = 'center';
                 ctx.fillText(i * 10, x, height - padding + 20);
-                
+
+                // Marcas eje Y
                 if (i <= 8) {
                     ctx.beginPath();
                     ctx.moveTo(padding, y);
@@ -606,7 +706,36 @@
                     ctx.stroke();
                     ctx.textAlign = 'right';
                     ctx.fillText(i * 10, padding - 10, y + 4);
+                    ctx.textAlign = 'center';
                 }
+            }
+
+            // Graficar punto actual
+            const ll = parseFloat(llInput.value) || 0;
+            const ip = parseFloat(ipCalculado.value) || 0;
+
+            if (ll > 0 && ip >= 0) {
+                ctx.fillStyle = '#d32f2f';
+                ctx.beginPath();
+                ctx.arc(padding + ll * scaleX, height - padding - ip * scaleY, 8, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.strokeStyle = '#8b0000';
+                ctx.lineWidth = 2.5;
+                ctx.stroke();
+
+                // Líneas de referencia del punto
+                ctx.strokeStyle = 'rgba(211, 47, 47, 0.3)';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.moveTo(padding + ll * scaleX, height - padding);
+                ctx.lineTo(padding + ll * scaleX, height - padding - ip * scaleY);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(padding, height - padding - ip * scaleY);
+                ctx.lineTo(padding + ll * scaleX, height - padding - ip * scaleY);
+                ctx.stroke();
+                ctx.setLineDash([]);
             }
         }
 
@@ -615,13 +744,18 @@
             e.preventDefault();
 
             const nombre = document.getElementById('nombre').value;
-            const ll = parseFloat(document.getElementById('ll').value);
-            const lp = parseFloat(document.getElementById('lp').value);
-            const ip = parseFloat(document.getElementById('ip').value);
+            const ll = parseFloat(llInput.value);
+            const ip = parseFloat(ipCalculado.value);
+            const lp = parseFloat(lpInput.value) || ll - ip;
             const mo = parseFloat(document.getElementById('mo').value);
             const ss = parseFloat(document.getElementById('ss').value);
-            const finos = parseFloat(document.getElementById('finos').value);
+            const finos = parseFloat(document.getElementById('sieve-008').value);
             const cbr = parseFloat(document.getElementById('cbr').value);
+
+            if (!finos) {
+                alert('Por favor introduce el valor de Finos (# 0.08)');
+                return;
+            }
 
             const resultado = clasificarSuelo(ll, lp, ip, mo, ss, finos, cbr);
             
@@ -636,7 +770,6 @@
             suelos.unshift(suelo);
             suloActual = suelo;
 
-            // Mostrar resultado
             document.getElementById('classResult').textContent = resultado.clasificacion;
             document.getElementById('classDetails').innerHTML = `
                 <div>Método 1 (Tabla): <strong>${resultado.metodo1}</strong></div>
@@ -684,8 +817,8 @@
                     <tr>
                         <td><strong>${suelo.nombre}</strong></td>
                         <td>${suelo.ll}</td>
-                        <td>${suelo.lp}</td>
-                        <td>${suelo.ip}</td>
+                        <td>${suelo.lp.toFixed(1)}</td>
+                        <td>${suelo.ip.toFixed(1)}</td>
                         <td>${suelo.mo}</td>
                         <td>${suelo.ss}</td>
                         <td>${suelo.finos}</td>
@@ -714,13 +847,13 @@
             const suelo = suelos.find(s => s.id === id);
             if (suelo) {
                 document.getElementById('nombre').value = suelo.nombre + ' (copia)';
-                document.getElementById('ll').value = suelo.ll;
-                document.getElementById('lp').value = suelo.lp;
+                llInput.value = suelo.ll;
+                ipInput.value = suelo.ip;
                 document.getElementById('mo').value = suelo.mo;
                 document.getElementById('ss').value = suelo.ss;
-                document.getElementById('finos').value = suelo.finos;
+                document.getElementById('sieve-008').value = suelo.finos;
                 document.getElementById('cbr').value = suelo.cbr;
-                calcularIP();
+                calcularPlasticidad();
                 window.scrollTo({top: 0, behavior: 'smooth'});
             }
         }
@@ -729,14 +862,13 @@
             const suelo = suelos.find(s => s.id === id);
             if (suelo) {
                 document.getElementById('nombre').value = suelo.nombre;
-                document.getElementById('ll').value = suelo.ll;
-                document.getElementById('lp').value = suelo.lp;
+                llInput.value = suelo.ll;
+                ipInput.value = suelo.ip;
                 document.getElementById('mo').value = suelo.mo;
                 document.getElementById('ss').value = suelo.ss;
-                document.getElementById('finos').value = suelo.finos;
+                document.getElementById('sieve-008').value = suelo.finos;
                 document.getElementById('cbr').value = suelo.cbr;
-                suloActual = suelo;
-                calcularIP();
+                calcularPlasticidad();
                 eliminarSuelo(id);
                 window.scrollTo({top: 0, behavior: 'smooth'});
             }
