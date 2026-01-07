@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang=\"es\">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset=\"UTF-8\">
+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
     <title>Clasificador de Suelos PG-3</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src=\"https://cdn.jsdelivr.net/npm/chart.js\"></script>
     <style>
         :root {
             --color-white: rgba(255, 255, 255, 1);
@@ -111,8 +111,8 @@
             color: var(--color-slate-900);
         }
 
-        input[type="text"],
-        input[type="number"],
+        input[type=\"text\"],
+        input[type=\"number\"],
         select {
             width: 100%;
             padding: 10px 12px;
@@ -124,8 +124,8 @@
             font-family: inherit;
         }
 
-        input[type="text"]:focus,
-        input[type="number"]:focus,
+        input[type=\"text\"]:focus,
+        input[type=\"number\"]:focus,
         select:focus {
             outline: none;
             border-color: var(--color-primary);
@@ -135,12 +135,6 @@
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-
-        .form-row-3 {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
             gap: 15px;
         }
 
@@ -168,11 +162,6 @@
 
         .btn-primary:hover {
             background: var(--color-primary-hover);
-        }
-
-        .btn-primary:disabled {
-            background: var(--color-gray-300);
-            cursor: not-allowed;
         }
 
         .btn-secondary {
@@ -356,4 +345,414 @@
             margin-bottom: 15px;
         }
 
-        .sieve-grid-5 {\n            display: grid;\n            grid-template-columns: repeat(5, 1fr);\n            gap: 10px;\n        }\n\n        .sieve-label {\n            font-size: 11px;\n            text-align: center;\n            margin-bottom: 4px;\n            font-weight: 500;\n            color: var(--color-text-primary);\n        }\n\n        .criteria-check {\n            display: flex;\n            flex-direction: column;\n            gap: 8px;\n            margin-top: 15px;\n            padding-top: 15px;\n            border-top: 1px solid rgba(94, 82, 64, 0.2);\n        }\n\n        .criteria-item {\n            font-size: 12px;\n            padding: 6px 10px;\n            border-radius: 4px;\n            display: flex;\n            align-items: center;\n            gap: 8px;\n        }\n\n        .criteria-pass {\n            background: rgba(34, 197, 94, 0.1);\n            color: var(--color-green-500);\n        }\n\n        .criteria-fail {\n            background: rgba(192, 21, 47, 0.1);\n            color: var(--color-red-500);\n        }\n\n        .check-mark {\n            font-weight: bold;\n        }\n    </style>\n</head>\n<body>\n    <header>\n        <h1>⚙️ Clasificador de Suelos PG-3</h1>\n        <p class=\"subtitle\">Normativa de Carreteras - Sistema Español</p>\n    </header>\n\n    <div class=\"container\">\n        <!-- ENTRADA DE DATOS -->\n        <div class=\"card\">\n            <h2>📋 Datos del Suelo</h2>\n            \n            <div class=\"info-text\">\n                Introduce los parámetros del suelo según la tabla PG-3 oficial.\n            </div>\n\n            <form id=\"suelo-form\">\n                <div class=\"form-group\">\n                    <label for=\"nombre\">Nombre del Suelo</label>\n                    <input type=\"text\" id=\"nombre\" placeholder=\"ej: Suelo A, Muestra 1\" required>\n                </div>\n\n                <div class=\"form-group\">\n                    <label>Materia Orgánica</label>\n                    <div class=\"form-row\">\n                        <div>\n                            <label for=\"mo\">MO (%)</label>\n                            <input type=\"number\" id=\"mo\" placeholder=\"0\" step=\"0.1\" min=\"0\" required>\n                        </div>\n                        <div>\n                            <label for=\"ss\">SS (%)</label>\n                            <input type=\"number\" id=\"ss\" placeholder=\"0\" step=\"0.1\" min=\"0\" required>\n                        </div>\n                    </div>\n                </div>\n\n                <div class=\"form-group\">\n                    <label>Propiedades Geotécnicas</label>\n                    <div class=\"form-row\">\n                        <div>\n                            <label for=\"hinchamiento\">Hinchamiento (%)</label>\n                            <input type=\"number\" id=\"hinchamiento\" placeholder=\"0\" step=\"0.01\" min=\"0\" required>\n                        </div>\n                        <div>\n                            <label for=\"finos\">Finos # 0.080 (%)</label>\n                            <input type=\"number\" id=\"finos\" placeholder=\"0\" step=\"0.1\" min=\"0\" required>\n                        </div>\n                    </div>\n                </div>\n\n                <div class=\"form-group\">\n                    <label>Granulometría (Tamices)</label>\n                    <div class=\"sieve-group\">\n                        <div class=\"sieve-grid-5\">\n                            <div>\n                                <div class=\"sieve-label\"># 2</div>\n                                <input type=\"number\" class=\"sieve-input\" id=\"sieve-2\" placeholder=\"%\" step=\"0.1\" min=\"0\">\n                            </div>\n                            <div>\n                                <div class=\"sieve-label\"># 0.4</div>\n                                <input type=\"number\" class=\"sieve-input\" id=\"sieve-04\" placeholder=\"%\" step=\"0.1\" min=\"0\">\n                            </div>\n                            <div>\n                                <div class=\"sieve-label\">LL (%)</div>\n                                <input type=\"number\" id=\"ll\" placeholder=\"0\" step=\"0.1\" min=\"0\">\n                            </div>\n                            <div>\n                                <div class=\"sieve-label\">LP (%)</div>\n                                <input type=\"number\" id=\"lp\" placeholder=\"0\" step=\"0.1\" min=\"0\">\n                            </div>\n                            <div>\n                                <div class=\"sieve-label\">IP (%)</div>\n                                <input type=\"number\" id=\"ip\" placeholder=\"Auto\" readonly>\n                            </div>\n                        </div>\n                    </div>\n                </div>\n\n                <div class=\"button-group\">\n                    <button type=\"submit\" class=\"btn-primary\">Clasificar Suelo</button>\n                    <button type=\"reset\" class=\"btn-secondary\">Limpiar</button>\n                </div>\n\n                <div id=\"resultado\" class=\"result-box\">\n                    <h3>Clasificación PG-3</h3>\n                    <div class=\"classification\" id=\"classResult\">—</div>\n                    <div class=\"details\" id=\"classDetails\"></div>\n                </div>\n            </form>\n        </div>\n\n        <!-- GRÁFICA DE CASAGRANDE -->\n        <div class=\"card\">\n            <h2>📊 Gráfica de Casagrande (PG-3)</h2>\n            <p style=\"font-size: 12px; color: var(--color-text-secondary); margin-bottom: 10px;\">\n                Clasificación según límite líquido (LL) e índice de plasticidad (IP)\n            </p>\n            <div class=\"chart-container\">\n                <canvas id=\"grafica\"></canvas>\n            </div>\n            <p style=\"font-size: 11px; color: var(--color-text-secondary); margin-top: 12px; text-align: center;\">\n                Punto rojo = Suelo actual | Zonas coloreadas = Clasificación PG-3\n            </p>\n        </div>\n    </div>\n\n    <!-- TABLA DE HISTÓRICO -->\n    <div class=\"table-wrapper\">\n        <h2 style=\"margin-bottom: 20px; color: var(--color-slate-900);\">📈 Histórico de Clasificaciones</h2>\n        <div id=\"tabla-container\">\n            <div class=\"empty-state\">\n                <p>No hay suelos clasificados aún. Introduce los datos y haz clic en \"Clasificar Suelo\".</p>\n            </div>\n        </div>\n    </div>\n\n    <script>\n        let suelos = [];\n        let chartInstance = null;\n\n        const form = document.getElementById('suelo-form');\n        const llInput = document.getElementById('ll');\n        const lpInput = document.getElementById('lp');\n        const ipInput = document.getElementById('ip');\n        const chartCanvas = document.getElementById('grafica');\n\n        // Calcular IP = LL - LP\n        function calcularIP() {\n            const ll = parseFloat(llInput.value) || 0;\n            const lp = parseFloat(lpInput.value) || 0;\n            if (ll > 0 && lp > 0) {\n                ipInput.value = (ll - lp).toFixed(1);\n            } else {\n                ipInput.value = '';\n            }\n            dibujarGrafica();\n        }\n\n        llInput.addEventListener('input', calcularIP);\n        lpInput.addEventListener('input', calcularIP);\n\n        // ======================================================\n        // LÓGICA DE CLASIFICACIÓN PG-3 OFICIAL\n        // ======================================================\n        function clasificarSuelo(params) {\n            const { mo, ss, hinchamiento, finos, sieve2, sieve04, ll, ip } = params;\n\n            // Verificar cada nivel jerárquicamente\n            \n            // SELECCIONADO: Más restrictivo\n            const seleccionadoMO = mo < 0.2;\n            const seleccionadoSS = ss < 0.2;\n            const seleccionadoHinch = hinchamiento < 3;\n            const seleccionadoFinos = finos < 25;\n            const seleccionadoSieve2 = !sieve2 || sieve2 < 80;\n            const seleccionadoSieve04 = !sieve04 || sieve04 < 75;\n            \n            const esSeleccionado = seleccionadoMO && seleccionadoSS && \n                                   seleccionadoHinch && seleccionadoFinos && \n                                   seleccionadoSieve2 && seleccionadoSieve04;\n\n            if (esSeleccionado) {\n                return {\n                    clasificacion: 'Seleccionado',\n                    criterios: [\n                        { condicion: 'MO < 0.2%', cumple: seleccionadoMO, valor: `${mo}%` },\n                        { condicion: 'SS < 0.2%', cumple: seleccionadoSS, valor: `${ss}%` },\n                        { condicion: 'Hinchamiento < 3%', cumple: seleccionadoHinch, valor: `${hinchamiento}%` },\n                        { condicion: 'Finos < 25%', cumple: seleccionadoFinos, valor: `${finos}%` },\n                        { condicion: '#2 < 80%', cumple: seleccionadoSieve2, valor: sieve2 ? `${sieve2}%` : 'N/A' },\n                        { condicion: '#0.4 < 75%', cumple: seleccionadoSieve04, valor: sieve04 ? `${sieve04}%` : 'N/A' }\n                    ]\n                };\n            }\n\n            // ADECUADO\n            const adecuadoMO = mo < 1;\n            const adecuadoSS = ss < 0.2;\n            const adecuadoHinch = hinchamiento < 3;\n            const adecuadoFinos = finos < 35;\n            const adecuadoSieve2 = !sieve2 || sieve2 < 80;\n            \n            const esAdecuado = adecuadoMO && adecuadoSS && adecuadoHinch && \n                              adecuadoFinos && adecuadoSieve2;\n\n            if (esAdecuado) {\n                return {\n                    clasificacion: 'Adecuado',\n                    criterios: [\n                        { condicion: 'MO < 1%', cumple: adecuadoMO, valor: `${mo}%` },\n                        { condicion: 'SS < 0.2%', cumple: adecuadoSS, valor: `${ss}%` },\n                        { condicion: 'Hinchamiento < 3%', cumple: adecuadoHinch, valor: `${hinchamiento}%` },\n                        { condicion: 'Finos < 35%', cumple: adecuadoFinos, valor: `${finos}%` },\n                        { condicion: '#2 < 80%', cumple: adecuadoSieve2, valor: sieve2 ? `${sieve2}%` : 'N/A' }\n                    ]\n                };\n            }\n\n            // TOLERABLE\n            const tolerableMO = mo < 2;\n            const tolerableSS = ss < 1;\n            const tolerableHinch = hinchamiento < 3;\n            \n            const esTolerable = tolerableMO && tolerableSS && tolerableHinch;\n\n            if (esTolerable) {\n                return {\n                    clasificacion: 'Tolerable',\n                    criterios: [\n                        { condicion: 'MO < 2%', cumple: tolerableMO, valor: `${mo}%` },\n                        { condicion: 'SS < 1%', cumple: tolerableSS, valor: `${ss}%` },\n                        { condicion: 'Hinchamiento < 3%', cumple: tolerableHinch, valor: `${hinchamiento}%` }\n                    ]\n                };\n            }\n\n            // MARGINAL\n            const marginalMO = mo < 5;\n            const marginalSS = ss < 20;\n            const marginalHinch = hinchamiento < 5;\n            \n            const esMarginal = marginalMO && marginalSS && marginalHinch;\n\n            if (esMarginal) {\n                return {\n                    clasificacion: 'Marginal',\n                    criterios: [\n                        { condicion: 'MO < 5%', cumple: marginalMO, valor: `${mo}%` },\n                        { condicion: 'SS < 20%', cumple: marginalSS, valor: `${ss}%` },\n                        { condicion: 'Hinchamiento < 5%', cumple: marginalHinch, valor: `${hinchamiento}%` }\n                    ]\n                };\n            }\n\n            // INADECUADO\n            return {\n                clasificacion: 'Inadecuado',\n                criterios: [\n                    { condicion: 'MO < 5%', cumple: marginalMO, valor: `${mo}%` },\n                    { condicion: 'SS < 20%', cumple: marginalSS, valor: `${ss}%` },\n                    { condicion: 'Hinchamiento < 5%', cumple: marginalHinch, valor: `${hinchamiento}%` }\n                ]\n            };\n        }\n\n        // Dibujar gráfica Casagrande\n        function dibujarGrafica() {\n            const ll = parseFloat(llInput.value) || 0;\n            const ip = parseFloat(ipInput.value) || 0;\n\n            const lineAPoints = [];\n            for (let x = 0; x <= 100; x += 2) {\n                lineAPoints.push({ x: x, y: x < 20 ? 0 : 0.73 * (x - 20) });\n            }\n\n            const chartConfig = {\n                type: 'scatter',\n                data: {\n                    datasets: [\n                        // Zona SELECCIONADA\n                        {\n                            label: 'Seleccionados',\n                            data: [{x: 0, y: 0}, {x: 25, y: 0}, {x: 25, y: 3}, {x: 0, y: 3}, {x: 0, y: 0}],\n                            fill: true,\n                            backgroundColor: 'rgba(33, 128, 141, 0.3)',\n                            borderColor: 'rgba(33, 128, 141, 0.8)',\n                            borderWidth: 2,\n                            pointRadius: 0,\n                            showLine: true,\n                            tension: 0\n                        },\n                        // Zona ADECUADA\n                        {\n                            label: 'Adecuados',\n                            data: [{x: 25, y: 0}, {x: 35, y: 0}, {x: 35, y: 10}, {x: 25, y: 3}, {x: 25, y: 0}],\n                            fill: true,\n                            backgroundColor: 'rgba(34, 197, 94, 0.3)',\n                            borderColor: 'rgba(34, 197, 94, 0.8)',\n                            borderWidth: 2,\n                            pointRadius: 0,\n                            showLine: true,\n                            tension: 0\n                        },\n                        // Zona TOLERABLE\n                        {\n                            label: 'Tolerables',\n                            data: [{x: 0, y: 0}, {x: 65, y: 0}, {x: 65, y: 32}, {x: 0, y: 0}],\n                            fill: true,\n                            backgroundColor: 'rgba(234, 179, 8, 0.3)',\n                            borderColor: 'rgba(234, 179, 8, 0.8)',\n                            borderWidth: 2,\n                            pointRadius: 0,\n                            showLine: true,\n                            tension: 0\n                        },\n                        // Zona MARGINAL\n                        {\n                            label: 'Marginales',\n                            data: [{x: 65, y: 0}, {x: 100, y: 0}, {x: 100, y: 58}, {x: 65, y: 32}, {x: 65, y: 0}],\n                            fill: true,\n                            backgroundColor: 'rgba(168, 75, 47, 0.3)',\n                            borderColor: 'rgba(168, 75, 47, 0.8)',\n                            borderWidth: 2,\n                            pointRadius: 0,\n                            showLine: true,\n                            tension: 0\n                        },\n                        // Línea A\n                        {\n                            label: 'Línea A: IP = 0.73(LL - 20)',\n                            data: lineAPoints,\n                            borderColor: '#000',\n                            borderWidth: 3,\n                            pointRadius: 0,\n                            showLine: true,\n                            fill: false,\n                            tension: 0\n                        },\n                        // Punto actual\n                        {\n                            label: 'Suelo Actual',\n                            data: ll > 0 && ip >= 0 ? [{x: ll, y: ip}] : [],\n                            pointRadius: 10,\n                            pointBackgroundColor: '#d32f2f',\n                            pointBorderColor: '#8b0000',\n                            pointBorderWidth: 3,\n                            showLine: false\n                        }\n                    ]\n                },\n                options: {\n                    responsive: true,\n                    maintainAspectRatio: false,\n                    plugins: {\n                        legend: {\n                            display: true,\n                            position: 'top',\n                            labels: {\n                                usePointStyle: true,\n                                font: { size: 12, weight: '500' },\n                                padding: 15,\n                                color: '#333'\n                            }\n                        },\n                        tooltip: {\n                            enabled: true,\n                            backgroundColor: 'rgba(0, 0, 0, 0.8)',\n                            padding: 10,\n                            titleFont: { size: 12, weight: 'bold' },\n                            bodyFont: { size: 11 },\n                            cornerRadius: 4\n                        }\n                    },\n                    scales: {\n                        x: {\n                            type: 'linear',\n                            position: 'bottom',\n                            min: 0,\n                            max: 100,\n                            ticks: { stepSize: 10, font: { size: 11 }, color: '#666' },\n                            grid: { color: 'rgba(200, 200, 200, 0.2)', drawBorder: true, borderColor: '#333' },\n                            title: { display: true, text: 'LL (Límite Líquido %)', font: { size: 13, weight: 'bold' }, color: '#333', padding: 12 }\n                        },\n                        y: {\n                            min: 0,\n                            max: 80,\n                            ticks: { stepSize: 10, font: { size: 11 }, color: '#666' },\n                            grid: { color: 'rgba(200, 200, 200, 0.2)', drawBorder: true, borderColor: '#333' },\n                            title: { display: true, text: 'IP (Índice Plasticidad %)', font: { size: 13, weight: 'bold' }, color: '#333', padding: 12 }\n                        }\n                    }\n                }\n            };\n\n            if (chartInstance) {\n                chartInstance.data = chartConfig.data;\n                chartInstance.update();\n            } else {\n                chartInstance = new Chart(chartCanvas, chartConfig);\n            }\n        }\n\n        // Envío del formulario\n        form.addEventListener('submit', function(e) {\n            e.preventDefault();\n\n            const params = {\n                mo: parseFloat(document.getElementById('mo').value) || 0,\n                ss: parseFloat(document.getElementById('ss').value) || 0,\n                hinchamiento: parseFloat(document.getElementById('hinchamiento').value) || 0,\n                finos: parseFloat(document.getElementById('finos').value) || 0,\n                sieve2: parseFloat(document.getElementById('sieve-2').value),\n                sieve04: parseFloat(document.getElementById('sieve-04').value),\n                ll: parseFloat(llInput.value) || 0,\n                ip: parseFloat(ipInput.value) || 0\n            };\n\n            const resultado = clasificarSuelo(params);\n\n            const suelo = {\n                id: Date.now(),\n                nombre: document.getElementById('nombre').value,\n                mo: params.mo,\n                ss: params.ss,\n                hinchamiento: params.hinchamiento,\n                finos: params.finos,\n                ll: params.ll,\n                ip: params.ip,\n                clasificacion: resultado.clasificacion,\n                fecha: new Date().toLocaleString('es-ES')\n            };\n\n            suelos.unshift(suelo);\n\n            document.getElementById('classResult').textContent = resultado.clasificacion;\n            let detalles = '<div class=\"criteria-check\">';\n            resultado.criterios.forEach(c => {\n                const clase = c.cumple ? 'criteria-pass' : 'criteria-fail';\n                const check = c.cumple ? '✓' : '✗';\n                detalles += `<div class=\"criteria-item ${clase}\"><span class=\"check-mark\">${check}</span> ${c.condicion}: ${c.valor}</div>`;\n            });\n            detalles += '</div>';\n            document.getElementById('classDetails').innerHTML = detalles;\n            document.getElementById('resultado').classList.add('visible');\n\n            actualizarTabla();\n            dibujarGrafica();\n        });\n\n        function actualizarTabla() {\n            const container = document.getElementById('tabla-container');\n\n            if (suelos.length === 0) {\n                container.innerHTML = '<div class=\"empty-state\"><p>No hay suelos clasificados aún.</p></div>';\n                return;\n            }\n\n            let html = `\n                <table>\n                    <thead>\n                        <tr>\n                            <th>Nombre</th>\n                            <th>MO</th>\n                            <th>SS</th>\n                            <th>Hinch.</th>\n                            <th>Finos</th>\n                            <th>LL</th>\n                            <th>IP</th>\n                            <th>Clasificación</th>\n                            <th>Acciones</th>\n                        </tr>\n                    </thead>\n                    <tbody>\n            `;\n\n            suelos.forEach(suelo => {\n                const badge = `badge-${suelo.clasificacion.toLowerCase()}`;\n                html += `\n                    <tr>\n                        <td><strong>${suelo.nombre}</strong></td>\n                        <td>${suelo.mo}</td>\n                        <td>${suelo.ss}</td>\n                        <td>${suelo.hinchamiento}</td>\n                        <td>${suelo.finos}</td>\n                        <td>${suelo.ll}</td>\n                        <td>${suelo.ip.toFixed(1)}</td>\n                        <td><span class=\"badge ${badge}\">${suelo.clasificacion}</span></td>\n                        <td>\n                            <div class=\"action-buttons\">\n                                <button class=\"btn-sm\" onclick=\"copiarSuelo(${suelo.id})\" title=\"Copiar\">📋</button>\n                                <button class=\"btn-sm\" onclick=\"editarSuelo(${suelo.id})\" title=\"Editar\">✏️</button>\n                                <button class=\"btn-sm btn-delete\" onclick=\"eliminarSuelo(${suelo.id})\" title=\"Eliminar\">🗑️</button>\n                            </div>\n                        </td>\n                    </tr>\n                `;\n            });\n\n            html += '</tbody></table>';\n            container.innerHTML = html;\n        }\n\n        function copiarSuelo(id) {\n            const suelo = suelos.find(s => s.id === id);\n            if (suelo) {\n                document.getElementById('nombre').value = suelo.nombre + ' (copia)';\n                document.getElementById('mo').value = suelo.mo;\n                document.getElementById('ss').value = suelo.ss;\n                document.getElementById('hinchamiento').value = suelo.hinchamiento;\n                document.getElementById('finos').value = suelo.finos;\n                llInput.value = suelo.ll;\n                lpInput.value = suelo.ip > 0 ? (suelo.ll - suelo.ip).toFixed(1) : '';\n                calcularIP();\n                window.scrollTo({top: 0, behavior: 'smooth'});\n            }\n        }\n\n        function editarSuelo(id) {\n            copiarSuelo(id);\n            eliminarSuelo(id);\n        }\n\n        function eliminarSuelo(id) {\n            suelos = suelos.filter(s => s.id !== id);\n            actualizarTabla();\n            document.getElementById('resultado').classList.remove('visible');\n        }\n\n        // Inicializar\n        dibujarGrafica();\n        actualizarTabla();\n    </script>\n</body>\n</html>
+        .sieve-grid-5 {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+
+        .sieve-label {
+            font-size: 11px;
+            text-align: center;
+            margin-bottom: 4px;
+            font-weight: 500;
+            color: var(--color-text-primary);
+        }
+
+        .criteria-check {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(94, 82, 64, 0.2);
+        }
+
+        .criteria-item {
+            font-size: 12px;
+            padding: 6px 10px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .criteria-pass {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--color-green-500);
+        }
+
+        .criteria-fail {
+            background: rgba(192, 21, 47, 0.1);
+            color: var(--color-red-500);
+        }
+
+        .check-mark {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>⚙️ Clasificador de Suelos PG-3</h1>
+        <p class=\"subtitle\">Normativa de Carreteras - Sistema Español</p>
+    </header>
+
+    <div class=\"container\">
+        <div class=\"card\">
+            <h2>📋 Datos del Suelo</h2>
+            <div class=\"info-text\">
+                Introduce los parámetros del suelo según la tabla PG-3 oficial.
+            </div>
+
+            <form id=\"suelo-form\">
+                <div class=\"form-group\">
+                    <label for=\"nombre\">Nombre del Suelo</label>
+                    <input type=\"text\" id=\"nombre\" placeholder=\"ej: S1, S2, Muestra\" required>
+                </div>
+
+                <div class=\"form-group\">
+                    <label>Materia Orgánica</label>
+                    <div class=\"form-row\">
+                        <div>
+                            <label for=\"mo\">MO (%)</label>
+                            <input type=\"number\" id=\"mo\" placeholder=\"0\" step=\"0.1\" min=\"0\" required>
+                        </div>
+                        <div>
+                            <label for=\"ss\">SS (%)</label>
+                            <input type=\"number\" id=\"ss\" placeholder=\"0\" step=\"0.1\" min=\"0\" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class=\"form-group\">
+                    <label>Propiedades Geotécnicas</label>
+                    <div class=\"form-row\">
+                        <div>
+                            <label for=\"hinchamiento\">Hinchamiento (%)</label>
+                            <input type=\"number\" id=\"hinchamiento\" placeholder=\"0\" step=\"0.01\" min=\"0\" required>
+                        </div>
+                        <div>
+                            <label for=\"finos\">Finos # 0.080 (%)</label>
+                            <input type=\"number\" id=\"finos\" placeholder=\"0\" step=\"0.1\" min=\"0\" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class=\"form-group\">
+                    <label>Límites de Atterberg</label>
+                    <div class=\"form-row\">
+                        <div>
+                            <label for=\"ll\">LL (%)</label>
+                            <input type=\"number\" id=\"ll\" placeholder=\"0\" step=\"0.1\" min=\"0\">
+                        </div>
+                        <div>
+                            <label for=\"ip\">IP (%)</label>
+                            <input type=\"number\" id=\"ip\" placeholder=\"0\" step=\"0.1\" min=\"0\">
+                        </div>
+                    </div>
+                </div>
+
+                <div class=\"button-group\">
+                    <button type=\"submit\" class=\"btn-primary\">Clasificar Suelo</button>
+                    <button type=\"reset\" class=\"btn-secondary\">Limpiar</button>
+                </div>
+
+                <div id=\"resultado\" class=\"result-box\">
+                    <h3>Clasificación PG-3</h3>
+                    <div class=\"classification\" id=\"classResult\">—</div>
+                    <div class=\"details\" id=\"classDetails\"></div>
+                </div>
+            </form>
+        </div>
+
+        <div class=\"card\">
+            <h2>📊 Gráfica de Casagrande (PG-3)</h2>
+            <p style=\"font-size: 12px; color: var(--color-text-secondary); margin-bottom: 10px;\">
+                Clasificación según límite líquido (LL) e índice de plasticidad (IP)
+            </p>
+            <div class=\"chart-container\">
+                <canvas id=\"grafica\"></canvas>
+            </div>
+            <p style=\"font-size: 11px; color: var(--color-text-secondary); margin-top: 12px; text-align: center;\">
+                Punto rojo = Suelo actual | Zonas coloreadas = Clasificación PG-3
+            </p>
+        </div>
+    </div>
+
+    <div class=\"table-wrapper\">
+        <h2 style=\"margin-bottom: 20px; color: var(--color-slate-900);\">📈 Histórico de Clasificaciones</h2>
+        <div id=\"tabla-container\">
+            <div class=\"empty-state\">
+                <p>No hay suelos clasificados aún. Introduce los datos y haz clic en \"Clasificar Suelo\".</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let suelos = [];
+        let chartInstance = null;
+
+        const form = document.getElementById('suelo-form');
+        const llInput = document.getElementById('ll');
+        const ipInput = document.getElementById('ip');
+        const chartCanvas = document.getElementById('grafica');
+
+        function clasificarSuelo(params) {
+            const { mo, ss, hinchamiento, finos, ll, ip } = params;
+
+            console.log('DEBUG - Parámetros recibidos:', params);
+            
+            // SELECCIONADO
+            const seleccionado = mo < 0.2 && ss < 0.2 && hinchamiento < 3 && finos < 25;
+            if (seleccionado) {
+                console.log('✓ SELECCIONADO');
+                return {
+                    clasificacion: 'Seleccionado',
+                    criterios: [
+                        { condicion: 'MO < 0.2%', cumple: mo < 0.2, valor: `${mo}%` },
+                        { condicion: 'SS < 0.2%', cumple: ss < 0.2, valor: `${ss}%` },
+                        { condicion: 'Hinchamiento < 3%', cumple: hinchamiento < 3, valor: `${hinchamiento}%` },
+                        { condicion: 'Finos < 25%', cumple: finos < 25, valor: `${finos}%` }
+                    ]
+                };
+            }
+
+            // ADECUADO\n            const adecuado = mo < 1 && ss < 0.2 && hinchamiento < 3 && finos < 35;
+            if (adecuado) {
+                console.log('✓ ADECUADO');
+                return {
+                    clasificacion: 'Adecuado',
+                    criterios: [
+                        { condicion: 'MO < 1%', cumple: mo < 1, valor: `${mo}%` },
+                        { condicion: 'SS < 0.2%', cumple: ss < 0.2, valor: `${ss}%` },
+                        { condicion: 'Hinchamiento < 3%', cumple: hinchamiento < 3, valor: `${hinchamiento}%` },
+                        { condicion: 'Finos < 35%', cumple: finos < 35, valor: `${finos}%` }
+                    ]
+                };
+            }
+
+            // TOLERABLE
+            const tolerable = mo < 2 && ss < 1 && hinchamiento < 3;
+            if (tolerable) {
+                console.log('✓ TOLERABLE');
+                return {
+                    clasificacion: 'Tolerable',
+                    criterios: [
+                        { condicion: 'MO < 2%', cumple: mo < 2, valor: `${mo}%` },
+                        { condicion: 'SS < 1%', cumple: ss < 1, valor: `${ss}%` },
+                        { condicion: 'Hinchamiento < 3%', cumple: hinchamiento < 3, valor: `${hinchamiento}%` }
+                    ]
+                };
+            }
+
+            // MARGINAL
+            const marginal = mo < 5 && ss < 20 && hinchamiento < 5;
+            if (marginal) {
+                console.log('✓ MARGINAL');
+                return {
+                    clasificacion: 'Marginal',
+                    criterios: [
+                        { condicion: 'MO < 5%', cumple: mo < 5, valor: `${mo}%` },
+                        { condicion: 'SS < 20%', cumple: ss < 20, valor: `${ss}%` },
+                        { condicion: 'Hinchamiento < 5%', cumple: hinchamiento < 5, valor: `${hinchamiento}%` }
+                    ]
+                };
+            }
+
+            // INADECUADO
+            console.log('✗ INADECUADO');
+            return {
+                clasificacion: 'Inadecuado',
+                criterios: [
+                    { condicion: 'No cumple ningún criterio', cumple: false, valor: '—' }
+                ]
+            };
+        }
+
+        function dibujarGrafica() {
+            const ll = parseFloat(llInput.value) || 0;
+            const ip = parseFloat(ipInput.value) || 0;
+
+            const lineAPoints = [];
+            for (let x = 0; x <= 100; x += 2) {
+                lineAPoints.push({ x: x, y: x < 20 ? 0 : 0.73 * (x - 20) });
+            }
+
+            const chartConfig = {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        {
+                            label: 'Seleccionados',
+                            data: [{x: 0, y: 0}, {x: 25, y: 0}, {x: 25, y: 3}, {x: 0, y: 3}, {x: 0, y: 0}],
+                            fill: true,
+                            backgroundColor: 'rgba(33, 128, 141, 0.3)',
+                            borderColor: 'rgba(33, 128, 141, 0.8)',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            showLine: true,
+                            tension: 0
+                        },
+                        {
+                            label: 'Adecuados',
+                            data: [{x: 25, y: 0}, {x: 35, y: 0}, {x: 35, y: 10}, {x: 25, y: 3}, {x: 25, y: 0}],
+                            fill: true,
+                            backgroundColor: 'rgba(34, 197, 94, 0.3)',
+                            borderColor: 'rgba(34, 197, 94, 0.8)',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            showLine: true,
+                            tension: 0
+                        },
+                        {
+                            label: 'Tolerables',
+                            data: [{x: 0, y: 0}, {x: 65, y: 0}, {x: 65, y: 32}, {x: 0, y: 0}],
+                            fill: true,
+                            backgroundColor: 'rgba(234, 179, 8, 0.3)',
+                            borderColor: 'rgba(234, 179, 8, 0.8)',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            showLine: true,
+                            tension: 0
+                        },
+                        {
+                            label: 'Marginales',
+                            data: [{x: 65, y: 0}, {x: 100, y: 0}, {x: 100, y: 58}, {x: 65, y: 32}, {x: 65, y: 0}],
+                            fill: true,
+                            backgroundColor: 'rgba(168, 75, 47, 0.3)',
+                            borderColor: 'rgba(168, 75, 47, 0.8)',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            showLine: true,
+                            tension: 0
+                        },
+                        {
+                            label: 'Línea A: IP = 0.73(LL - 20)',
+                            data: lineAPoints,
+                            borderColor: '#000',
+                            borderWidth: 3,
+                            pointRadius: 0,
+                            showLine: true,
+                            fill: false,
+                            tension: 0
+                        },
+                        {
+                            label: 'Suelo Actual',
+                            data: ll > 0 && ip >= 0 ? [{x: ll, y: ip}] : [],
+                            pointRadius: 10,
+                            pointBackgroundColor: '#d32f2f',
+                            pointBorderColor: '#8b0000',
+                            pointBorderWidth: 3,
+                            showLine: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, position: 'top', labels: { usePointStyle: true, font: { size: 12, weight: '500' }, padding: 15, color: '#333' } },
+                        tooltip: { enabled: true, backgroundColor: 'rgba(0, 0, 0, 0.8)', padding: 10, titleFont: { size: 12, weight: 'bold' }, bodyFont: { size: 11 }, cornerRadius: 4 }
+                    },
+                    scales: {
+                        x: { type: 'linear', position: 'bottom', min: 0, max: 100, ticks: { stepSize: 10, font: { size: 11 }, color: '#666' }, grid: { color: 'rgba(200, 200, 200, 0.2)', drawBorder: true, borderColor: '#333' }, title: { display: true, text: 'LL (%)', font: { size: 13, weight: 'bold' }, color: '#333', padding: 12 } },
+                        y: { min: 0, max: 80, ticks: { stepSize: 10, font: { size: 11 }, color: '#666' }, grid: { color: 'rgba(200, 200, 200, 0.2)', drawBorder: true, borderColor: '#333' }, title: { display: true, text: 'IP (%)', font: { size: 13, weight: 'bold' }, color: '#333', padding: 12 } }
+                    }
+                }
+            };
+
+            if (chartInstance) {
+                chartInstance.data = chartConfig.data;
+                chartInstance.update();
+            } else {
+                chartInstance = new Chart(chartCanvas, chartConfig);
+            }
+        }
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const params = {
+                mo: parseFloat(document.getElementById('mo').value) || 0,
+                ss: parseFloat(document.getElementById('ss').value) || 0,
+                hinchamiento: parseFloat(document.getElementById('hinchamiento').value) || 0,
+                finos: parseFloat(document.getElementById('finos').value) || 0,
+                ll: parseFloat(llInput.value) || 0,
+                ip: parseFloat(ipInput.value) || 0
+            };
+
+            const resultado = clasificarSuelo(params);
+            const suelo = {
+                id: Date.now(),
+                nombre: document.getElementById('nombre').value,
+                ...params,
+                clasificacion: resultado.clasificacion
+            };
+
+            suelos.unshift(suelo);
+
+            document.getElementById('classResult').textContent = resultado.clasificacion;
+            let detalles = '<div class=\"criteria-check\">';
+            resultado.criterios.forEach(c => {
+                const clase = c.cumple ? 'criteria-pass' : 'criteria-fail';
+                const check = c.cumple ? '✓' : '✗';
+                detalles += `<div class=\"criteria-item ${clase}\"><span class=\"check-mark\">${check}</span> ${c.condicion}: ${c.valor}</div>`;
+            });
+            detalles += '</div>';
+            document.getElementById('classDetails').innerHTML = detalles;
+            document.getElementById('resultado').classList.add('visible');
+
+            actualizarTabla();
+            dibujarGrafica();
+        });
+
+        function actualizarTabla() {
+            const container = document.getElementById('tabla-container');
+            if (suelos.length === 0) {
+                container.innerHTML = '<div class=\"empty-state\"><p>No hay suelos clasificados aún.</p></div>';
+                return;
+            }
+
+            let html = '<table><thead><tr><th>Nombre</th><th>MO</th><th>SS</th><th>Hinc.</th><th>Finos</th><th>LL</th><th>IP</th><th>Clasificación</th><th>Acciones</th></tr></thead><tbody>';
+
+            suelos.forEach(suelo => {
+                const badge = `badge-${suelo.clasificacion.toLowerCase()}`;
+                html += `<tr><td><strong>${suelo.nombre}</strong></td><td>${suelo.mo}</td><td>${suelo.ss}</td><td>${suelo.hinchamiento}</td><td>${suelo.finos}</td><td>${suelo.ll}</td><td>${suelo.ip}</td><td><span class=\"badge ${badge}\">${suelo.clasificacion}</span></td><td><div class=\"action-buttons\"><button class=\"btn-sm\" onclick=\"copiarSuelo(${suelo.id})\">📋</button><button class=\"btn-sm\" onclick=\"editarSuelo(${suelo.id})\">✏️</button><button class=\"btn-sm btn-delete\" onclick=\"eliminarSuelo(${suelo.id})\">🗑️</button></div></td></tr>`;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function copiarSuelo(id) {
+            const suelo = suelos.find(s => s.id === id);
+            if (suelo) {
+                document.getElementById('nombre').value = suelo.nombre + ' (copia)';
+                document.getElementById('mo').value = suelo.mo;
+                document.getElementById('ss').value = suelo.ss;
+                document.getElementById('hinchamiento').value = suelo.hinchamiento;
+                document.getElementById('finos').value = suelo.finos;
+                llInput.value = suelo.ll;
+                ipInput.value = suelo.ip;
+                dibujarGrafica();
+                window.scrollTo({top: 0, behavior: 'smooth'});
+            }
+        }
+
+        function editarSuelo(id) {
+            copiarSuelo(id);
+            eliminarSuelo(id);
+        }
+
+        function eliminarSuelo(id) {
+            suelos = suelos.filter(s => s.id !== id);
+            actualizarTabla();
+            document.getElementById('resultado').classList.remove('visible');
+        }
+
+        dibujarGrafica();
+        actualizarTabla();
+    </script>
+</body>
+</html>
