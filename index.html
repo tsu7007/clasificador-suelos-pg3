@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clasificador de Suelos PG-3</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --color-white: rgba(255, 255, 255, 1);
@@ -218,17 +219,12 @@
         .chart-container {
             position: relative;
             width: 100%;
-            height: 450px;
+            height: 500px;
             margin-top: 15px;
             border: 1px solid var(--color-border);
             border-radius: 6px;
             background: white;
-        }
-
-        canvas {
-            width: 100%;
-            height: 100%;
-            display: block;
+            padding: 10px;
         }
 
         .table-wrapper {
@@ -499,26 +495,14 @@
     <script>
         let suelos = [];
         let suloActual = null;
+        let chartInstance = null;
 
         const form = document.getElementById('suelo-form');
-        const canvas = document.getElementById('grafica');
-        const ctx = canvas.getContext('2d');
-
         const llInput = document.getElementById('ll');
         const ipInput = document.getElementById('ip');
         const lpInput = document.getElementById('lp');
         const ipCalculado = document.getElementById('ipCalculado');
-
-        // Ajustar tamaño del canvas
-        function resizeCanvas() {
-            const container = canvas.parentElement;
-            canvas.width = container.offsetWidth;
-            canvas.height = container.offsetHeight;
-            dibujarGrafica();
-        }
-
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
+        const chartCanvas = document.getElementById('grafica');
 
         // Cálculo bidireccional LP/IP
         function calcularPlasticidad() {
@@ -547,52 +531,32 @@
         ipInput.addEventListener('input', calcularPlasticidad);
         lpInput.addEventListener('input', calcularPlasticidad);
 
-        // Clasificación según PG-3 - LÓGICA MEJORADA
+        // Clasificación según PG-3
         function clasificarSuelo(ll, lp, ip, mo, ss, hinchamiento, finos, cbr) {
-            // Método 1: Tabla de características - Criterios PG-3
-            let clasif1 = 'Inadecuado';
-            
-            // Línea A de Casagrande
             const lineA = 0.73 * (ll - 20);
             
-            // SELECCIONADO: Todos los límites muy restrictivos
+            let clasif1 = 'Inadecuado';
             if (mo <= 0.2 && ss <= 0.2 && hinchamiento <= 0.2 && finos <= 25 && ll <= 30 && ip <= 10) {
                 clasif1 = 'Seleccionado';
-            }
-            // ADECUADO: Criterios menos restrictivos
-            else if (mo <= 1 && ss <= 0.2 && hinchamiento <= 0.2 && finos <= 35 && ll <= 40 && (ll <= 30 || ip >= 4)) {
+            } else if (mo <= 1 && ss <= 0.2 && hinchamiento <= 0.2 && finos <= 35 && ll <= 40 && (ll <= 30 || ip >= 4)) {
                 clasif1 = 'Adecuado';
-            }
-            // TOLERABLE: Cumple línea A y otros criterios
-            else if (mo <= 2 && ss <= 1 && hinchamiento <= 2.5 && finos <= 50 && ll <= 65 && (ll <= 40 || ip >= lineA)) {
+            } else if (mo <= 2 && ss <= 1 && hinchamiento <= 2.5 && finos <= 50 && ll <= 65 && (ll <= 40 || ip >= lineA)) {
                 clasif1 = 'Tolerable';
-            }
-            // MARGINAL: Criterios muy relajados
-            else if (mo <= 5 && ss <= 0.5 && hinchamiento <= 2.0 && finos <= 50 && ll <= 90 && ip <= (0.73 * (ll - 20) + 5)) {
+            } else if (mo <= 5 && ss <= 0.5 && hinchamiento <= 2.0 && finos <= 50 && ll <= 90 && ip <= (lineA + 5)) {
                 clasif1 = 'Marginal';
             }
 
-            // Método 2: Gráfica de Casagrande - Clasificación según zonas
             let clasif2 = 'Inadecuado';
-            
-            // Zona SELECCIONADA: LL ≤ 30, IP ≤ 10
             if (ll <= 30 && ip <= 10 && mo <= 0.2 && hinchamiento <= 0.2) {
                 clasif2 = 'Seleccionado';
-            }
-            // Zona ADECUADA: LL ≤ 40, IP ≤ (lineA o 4, lo que sea mayor)
-            else if (ll <= 40 && ip <= Math.max(lineA, 4) && mo <= 1 && hinchamiento <= 0.2) {
+            } else if (ll <= 40 && ip <= Math.max(lineA, 4) && mo <= 1 && hinchamiento <= 0.2) {
                 clasif2 = 'Adecuado';
-            }
-            // Zona TOLERABLE: LL ≤ 65, por debajo de línea A extendida
-            else if (ll <= 65 && ip <= Math.max(lineA, 0) && mo <= 2 && hinchamiento <= 2.5) {
+            } else if (ll <= 65 && ip <= Math.max(lineA, 0) && mo <= 2 && hinchamiento <= 2.5) {
                 clasif2 = 'Tolerable';
-            }
-            // Zona MARGINAL: LL ≤ 90, bajo ciertas condiciones
-            else if (ll <= 90 && ip <= (lineA + 5) && mo <= 5 && hinchamiento <= 2.0) {
+            } else if (ll <= 90 && ip <= (lineA + 5) && mo <= 5 && hinchamiento <= 2.0) {
                 clasif2 = 'Marginal';
             }
 
-            // Peor resultado (clasificación más restrictiva)
             const orden = { 'Seleccionado': 0, 'Adecuado': 1, 'Tolerable': 2, 'Marginal': 3, 'Inadecuado': 4 };
             const peor = orden[clasif1] >= orden[clasif2] ? clasif1 : clasif2;
 
@@ -604,168 +568,179 @@
             };
         }
 
-        // Dibujar gráfica de Casagrande PRECISA
+        // Dibujar gráfica con Chart.js
         function dibujarGrafica() {
-            const width = canvas.width;
-            const height = canvas.height;
-            const padding = 70;
-            const chartWidth = width - 2 * padding;
-            const chartHeight = height - 2 * padding;
-
-            // Fondo blanco
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, width, height);
-
-            // Escalas
-            const maxLL = 100;
-            const maxIP = 80;
-            const scaleX = chartWidth / maxLL;
-            const scaleY = chartHeight / maxIP;
-
-            // DIBUJAR ZONAS DE COLORES PRECISA SEGÚN PG-3
-            
-            // Zona SELECCIONADA (0-30 LL, 0-10 IP)
-            ctx.fillStyle = 'rgba(33, 128, 141, 0.15)';
-            ctx.fillRect(padding, height - padding - 10 * scaleY, 30 * scaleX, 10 * scaleY);
-            
-            // Zona ADECUADA (0-40 LL, 0-20 IP pero ajustada por línea A)
-            ctx.fillStyle = 'rgba(34, 197, 94, 0.15)';
-            ctx.beginPath();
-            ctx.moveTo(padding, height - padding);
-            ctx.lineTo(padding + 30 * scaleX, height - padding);
-            ctx.lineTo(padding + 30 * scaleX, height - padding - 10 * scaleY);
-            ctx.lineTo(padding + 40 * scaleX, height - padding - 4 * scaleY);
-            ctx.lineTo(padding + 40 * scaleX, height - padding);
-            ctx.closePath();
-            ctx.fill();
-
-            // Zona TOLERABLE (30-65 LL, bajo línea A mejorada)
-            ctx.fillStyle = 'rgba(234, 179, 8, 0.15)';
-            ctx.beginPath();
-            ctx.moveTo(padding + 30 * scaleX, height - padding - 10 * scaleY);
-            const lineAValue40 = 0.73 * (40 - 20);
-            const lineAValue65 = 0.73 * (65 - 20);
-            ctx.lineTo(padding + 40 * scaleX, height - padding - lineAValue40 * scaleY);
-            ctx.lineTo(padding + 65 * scaleX, height - padding - lineAValue65 * scaleY);
-            ctx.lineTo(padding + 65 * scaleX, height - padding);
-            ctx.lineTo(padding + 30 * scaleX, height - padding);
-            ctx.closePath();
-            ctx.fill();
-
-            // Zona MARGINAL (65-90 LL, bajo línea A)
-            ctx.fillStyle = 'rgba(168, 75, 47, 0.12)';
-            ctx.beginPath();
-            const lineAValue90 = 0.73 * (90 - 20);
-            ctx.moveTo(padding + 65 * scaleX, height - padding - lineAValue65 * scaleY);
-            ctx.lineTo(padding + 90 * scaleX, height - padding - lineAValue90 * scaleY);
-            ctx.lineTo(padding + 90 * scaleX, height - padding);
-            ctx.lineTo(padding + 65 * scaleX, height - padding);
-            ctx.closePath();
-            ctx.fill();
-
-            // EJES
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(padding, height - padding);
-            ctx.lineTo(width - padding, height - padding);
-            ctx.moveTo(padding, padding);
-            ctx.lineTo(padding, height - padding);
-            ctx.stroke();
-
-            // LÍNEA A: IP = 0.73(LL - 20) - FUNDAMENTAL
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 2.5;
-            ctx.beginPath();
-            const ll1 = 20, ip1 = 0;
-            const ll2 = 100, ip2 = 0.73 * (100 - 20);
-            ctx.moveTo(padding + ll1 * scaleX, height - padding - ip1 * scaleY);
-            ctx.lineTo(padding + ll2 * scaleX, height - padding - ip2 * scaleY);
-            ctx.stroke();
-
-            // Etiquetas de ejes
-            ctx.fillStyle = '#333';
-            ctx.font = 'bold 14px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText('LL (Límite Líquido %)', width / 2, height - 15);
-            
-            ctx.save();
-            ctx.translate(20, height / 2);
-            ctx.rotate(-Math.PI / 2);
-            ctx.fillText('IP (Índice Plasticidad %)', 0, 0);
-            ctx.restore();
-
-            // Etiquetas de zonas
-            ctx.font = 'bold 12px Arial';
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-            ctx.textAlign = 'center';
-            ctx.fillText('Seleccionados', padding + 15 * scaleX, height - padding - 5 * scaleY);
-            ctx.fillText('Adecuados', padding + 20 * scaleX, height - padding - 12 * scaleY);
-            ctx.fillText('Tolerables', padding + 47 * scaleX, height - padding - 20 * scaleY);
-            ctx.fillText('Marginales', padding + 77 * scaleX, height - padding - 35 * scaleY);
-
-            // Líneas de grid y números
-            ctx.strokeStyle = '#ddd';
-            ctx.lineWidth = 1;
-            ctx.font = '10px Arial';
-            ctx.fillStyle = '#666';
-            ctx.textAlign = 'center';
-
-            for (let i = 0; i <= 10; i++) {
-                const x = padding + (i * 10) * scaleX;
-                const y = height - padding - (i * 10) * scaleY;
-
-                // Marcas eje X (LL)
-                ctx.beginPath();
-                ctx.moveTo(x, height - padding);
-                ctx.lineTo(x, height - padding + 5);
-                ctx.stroke();
-                ctx.fillText(i * 10, x, height - padding + 20);
-
-                // Marcas eje Y (IP)
-                if (i <= 8) {
-                    ctx.beginPath();
-                    ctx.moveTo(padding, y);
-                    ctx.lineTo(padding - 5, y);
-                    ctx.stroke();
-                    ctx.textAlign = 'right';
-                    ctx.fillText(i * 10, padding - 10, y + 4);
-                    ctx.textAlign = 'center';
-                }
-            }
-
-            // Graficar punto actual del suelo
             const ll = parseFloat(llInput.value) || 0;
             const ip = parseFloat(ipCalculado.value) || 0;
 
-            if (ll > 0 && ip >= 0) {
-                // Punto rojo grande
-                ctx.fillStyle = '#d32f2f';
-                ctx.beginPath();
-                ctx.arc(padding + ll * scaleX, height - padding - ip * scaleY, 8, 0, 2 * Math.PI);
-                ctx.fill();
-                
-                // Borde del punto
-                ctx.strokeStyle = '#8b0000';
-                ctx.lineWidth = 2.5;
-                ctx.stroke();
+            // Generar puntos para la Línea A
+            const lineAPoints = [];
+            for (let x = 20; x <= 100; x += 1) {
+                lineAPoints.push({
+                    x: x,
+                    y: 0.73 * (x - 20)
+                });
+            }
 
-                // Líneas de referencia discontinuas
-                ctx.strokeStyle = 'rgba(211, 47, 47, 0.3)';
-                ctx.lineWidth = 1;
-                ctx.setLineDash([4, 4]);
-                
-                ctx.beginPath();
-                ctx.moveTo(padding + ll * scaleX, height - padding);
-                ctx.lineTo(padding + ll * scaleX, height - padding - ip * scaleY);
-                ctx.stroke();
-                
-                ctx.beginPath();
-                ctx.moveTo(padding, height - padding - ip * scaleY);
-                ctx.lineTo(padding + ll * scaleX, height - padding - ip * scaleY);
-                ctx.stroke();
-                
-                ctx.setLineDash([]);
+            // Zonas de fondo (usando plugins de Chart.js)
+            const chartConfig = {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        // Zona SELECCIONADA
+                        {
+                            label: 'Seleccionados',
+                            data: [{x: 0, y: 0}, {x: 30, y: 0}, {x: 30, y: 10}, {x: 0, y: 10}, {x: 0, y: 0}],
+                            fill: true,
+                            backgroundColor: 'rgba(33, 128, 141, 0.25)',
+                            borderColor: 'rgba(33, 128, 141, 0.5)',
+                            borderWidth: 1.5,
+                            pointRadius: 0,
+                            showLine: true,
+                            tension: 0
+                        },
+                        // Zona ADECUADA
+                        {
+                            label: 'Adecuados',
+                            data: [{x: 30, y: 0}, {x: 40, y: 0}, {x: 40, y: 14.6}, {x: 30, y: 10}, {x: 30, y: 0}],
+                            fill: true,
+                            backgroundColor: 'rgba(34, 197, 94, 0.25)',
+                            borderColor: 'rgba(34, 197, 94, 0.5)',
+                            borderWidth: 1.5,
+                            pointRadius: 0,
+                            showLine: true,
+                            tension: 0
+                        },
+                        // Zona TOLERABLE
+                        {
+                            label: 'Tolerables',
+                            data: [{x: 40, y: 0}, {x: 65, y: 0}, {x: 65, y: 32.9}, {x: 40, y: 14.6}, {x: 40, y: 0}],
+                            fill: true,
+                            backgroundColor: 'rgba(234, 179, 8, 0.25)',
+                            borderColor: 'rgba(234, 179, 8, 0.5)',
+                            borderWidth: 1.5,
+                            pointRadius: 0,
+                            showLine: true,
+                            tension: 0
+                        },
+                        // Zona MARGINAL
+                        {
+                            label: 'Marginales',
+                            data: [{x: 65, y: 0}, {x: 90, y: 0}, {x: 90, y: 51.1}, {x: 65, y: 32.9}, {x: 65, y: 0}],
+                            fill: true,
+                            backgroundColor: 'rgba(168, 75, 47, 0.25)',
+                            borderColor: 'rgba(168, 75, 47, 0.5)',
+                            borderWidth: 1.5,
+                            pointRadius: 0,
+                            showLine: true,
+                            tension: 0
+                        },
+                        // Línea A
+                        {
+                            label: 'Línea A: IP = 0.73(LL - 20)',
+                            data: lineAPoints,
+                            borderColor: '#000',
+                            borderWidth: 2.5,
+                            pointRadius: 0,
+                            showLine: true,
+                            fill: false,
+                            tension: 0
+                        },
+                        // Punto actual
+                        {
+                            label: 'Suelo Actual',
+                            data: ll > 0 && ip >= 0 ? [{x: ll, y: ip}] : [],
+                            pointRadius: 8,
+                            pointBackgroundColor: '#d32f2f',
+                            pointBorderColor: '#8b0000',
+                            pointBorderWidth: 2.5,
+                            showLine: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                font: {
+                                    size: 12,
+                                    weight: '500'
+                                },
+                                padding: 15,
+                                color: '#333'
+                            }
+                        },
+                        tooltip: {
+                            enabled: true,
+                            mode: 'point',
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 10,
+                            titleFont: { size: 12, weight: 'bold' },
+                            bodyFont: { size: 11 },
+                            cornerRadius: 4,
+                            displayColors: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            min: 0,
+                            max: 100,
+                            ticks: {
+                                stepSize: 10,
+                                font: { size: 11 },
+                                color: '#666'
+                            },
+                            grid: {
+                                color: 'rgba(200, 200, 200, 0.2)',
+                                drawBorder: true,
+                                borderColor: '#333'
+                            },
+                            title: {
+                                display: true,
+                                text: 'LL (Límite Líquido %)',
+                                font: { size: 13, weight: 'bold' },
+                                color: '#333',
+                                padding: 12
+                            }
+                        },
+                        y: {
+                            min: 0,
+                            max: 80,
+                            ticks: {
+                                stepSize: 10,
+                                font: { size: 11 },
+                                color: '#666'
+                            },
+                            grid: {
+                                color: 'rgba(200, 200, 200, 0.2)',
+                                drawBorder: true,
+                                borderColor: '#333'
+                            },
+                            title: {
+                                display: true,
+                                text: 'IP (Índice Plasticidad %)',
+                                font: { size: 13, weight: 'bold' },
+                                color: '#333',
+                                padding: 12
+                            }
+                        }
+                    }
+                }
+            };
+
+            if (chartInstance) {
+                chartInstance.data = chartConfig.data;
+                chartInstance.options = chartConfig.options;
+                chartInstance.update();
+            } else {
+                chartInstance = new Chart(chartCanvas, chartConfig);
             }
         }
 
@@ -915,6 +890,8 @@
             document.getElementById('resultado').classList.remove('visible');
         }
 
+        // Inicializar
+        dibujarGrafica();
         actualizarTabla();
     </script>
 </body>
