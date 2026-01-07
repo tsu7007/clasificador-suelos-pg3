@@ -482,7 +482,7 @@
                 <canvas id="grafica"></canvas>
             </div>
             <p style="font-size: 11px; color: var(--color-text-secondary); margin-top: 12px; text-align: center;">
-                Punto rojo = Suelo actual | Zonas coloreadas = Clasificación PG-3 | Punto fuera = Inadecuado
+                Punto rojo = Suelo actual | Zonas coloreadas = Clasificación PG-3
             </p>
         </div>
     </div>
@@ -536,35 +536,45 @@
         ipInput.addEventListener('input', calcularPlasticidad);
         lpInput.addEventListener('input', calcularPlasticidad);
 
-        // Clasificación según PG-3
+        // Clasificación según PG-3 - LÓGICA CORRECTA
         function clasificarSuelo(ll, lp, ip, mo, ss, hinchamiento, finos, cbr) {
             const lineA = 0.73 * (ll - 20);
             
+            // MÉTODO 1: Clasificación por tabla de características
             let clasif1 = 'Inadecuado';
+            
+            // SELECCIONADO: Todos los criterios estrictos
             if (mo <= 0.2 && ss <= 0.2 && hinchamiento <= 0.2 && finos <= 25 && ll <= 30 && ip <= 10) {
                 clasif1 = 'Seleccionado';
-            } else if (mo <= 1 && ss <= 0.2 && hinchamiento <= 0.2 && finos <= 35 && ll <= 40 && (ll <= 30 || ip >= 4)) {
+            }
+            // ADECUADO: Más permisivo que Seleccionado
+            else if (mo <= 1 && ss <= 0.2 && hinchamiento <= 0.2 && finos <= 35 && ll <= 40 && ip <= 10) {
                 clasif1 = 'Adecuado';
-            } else if (mo <= 2 && ss <= 1 && hinchamiento <= 2.5 && finos <= 50 && ll <= 65 && (ll <= 40 || ip >= lineA)) {
+            }
+            // TOLERABLE: Cumple con Casagrande pero más relajado
+            else if (mo <= 2 && ss <= 1 && hinchamiento <= 2.5 && finos <= 50 && ll <= 65 && (ip >= lineA || ll <= 30)) {
                 clasif1 = 'Tolerable';
-            } else if (mo <= 5 && ss <= 0.5 && hinchamiento <= 2.0 && finos <= 50 && ll <= 90 && ip <= (lineA + 5)) {
+            }
+            // MARGINAL: Muy permisivo
+            else if (mo <= 5 && ss <= 1 && hinchamiento <= 2 && ll <= 90) {
                 clasif1 = 'Marginal';
             }
 
+            // MÉTODO 2: Clasificación por Casagrande (LL vs IP)
             let clasif2 = 'Inadecuado';
-            if (ll <= 30 && ip <= 10 && mo <= 0.2 && hinchamiento <= 0.2) {
+            
+            if (ll <= 30 && ip <= 10) {
                 clasif2 = 'Seleccionado';
-            } else if (ll <= 40 && ip <= Math.max(lineA, 4) && mo <= 1 && hinchamiento <= 0.2) {
+            } else if (ll <= 40 && ip <= Math.max(lineA, 4)) {
                 clasif2 = 'Adecuado';
-            } else if (ll <= 65 && ip <= Math.max(lineA, 0) && mo <= 2 && hinchamiento <= 2.5) {
+            } else if (ll <= 65 && ip <= lineA) {
                 clasif2 = 'Tolerable';
-            } else if (ll <= 90 && ip <= (lineA + 5) && mo <= 5 && hinchamiento <= 2.0) {
+            } else if (ll <= 90 && ip <= (lineA + 8)) {
                 clasif2 = 'Marginal';
             }
 
-            // Orden de clasificación: 0=Seleccionado (mejor), 4=Inadecuado (peor)
+            // PEOR RESULTADO: el que tenga el número más alto
             const orden = { 'Seleccionado': 0, 'Adecuado': 1, 'Tolerable': 2, 'Marginal': 3, 'Inadecuado': 4 };
-            // El PEOR resultado es el que tiene el número MÁS ALTO
             const peor = orden[clasif1] >= orden[clasif2] ? clasif1 : clasif2;
 
             return {
@@ -589,7 +599,7 @@
                 });
             }
 
-            // Zonas de fondo (usando plugins de Chart.js)
+            // Zonas de fondo
             const chartConfig = {
                 type: 'scatter',
                 data: {
