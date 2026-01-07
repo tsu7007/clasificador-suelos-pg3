@@ -482,7 +482,7 @@
                 <canvas id="grafica"></canvas>
             </div>
             <p style="font-size: 11px; color: var(--color-text-secondary); margin-top: 12px; text-align: center;">
-                Punto rojo = Suelo actual | Zonas coloreadas = Clasificación PG-3
+                Punto rojo = Suelo actual | Zonas coloreadas = Clasificación PG-3 | Punto fuera = Inadecuado
             </p>
         </div>
     </div>
@@ -637,18 +637,6 @@
                             fill: true,
                             backgroundColor: 'rgba(168, 75, 47, 0.25)',
                             borderColor: 'rgba(168, 75, 47, 0.5)',
-                            borderWidth: 1.5,
-                            pointRadius: 0,
-                            showLine: true,
-                            tension: 0
-                        },
-                        // Zona INADECUADA
-                        {
-                            label: 'Inadecuados',
-                            data: [{x: 0, y: 10}, {x: 100, y: 80}, {x: 100, y: 51.1}, {x: 90, y: 51.1}, {x: 65, y: 32.9}, {x: 40, y: 14.6}, {x: 30, y: 10}, {x: 0, y: 10}],
-                            fill: true,
-                            backgroundColor: 'rgba(192, 21, 47, 0.15)',
-                            borderColor: 'rgba(192, 21, 47, 0.4)',
                             borderWidth: 1.5,
                             pointRadius: 0,
                             showLine: true,
