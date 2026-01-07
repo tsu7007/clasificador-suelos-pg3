@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clasificador de Suelos PG-3</title>
+    <style>
+        :root {
+            --color-white: rgba(255, 255, 255, 1);
+            --color-black: rgba(0, 0, 0, 1);
+            --color-cream-50: rgba(252, 252, 249, 1);
+            --color-gray-300: rgba(167, 169, 169, 1);
+            --color-slate-500: rgba(98, 108, 113, 1);
+            --color-brown-600: rgba(94, 82, 64, 1);
+            --color-charcoal-700: rgba(31, 33, 33, 1);
+            --color-charcoal-800: rgba(38, 40, 40, 1);
+            --color-slate-900: rgba(19, 52, 59, 1);
+            --color-teal-500: rgba(33, 128, 141, 1);
+            --color-teal-600: rgba(29, 116, 128, 1);
+            --color-red-500: rgba(192, 21, 47, 1);
+            --color-orange-500: rgba(168, 75, 47, 1);
+
+            --color-bg-primary: var(--color-cream-50);
+            --color-text-primary: var(--color-slate-900);
+            --color-text-secondary: var(--color-slate-500);
+            --color-primary: var(--color-teal-500);
+            --color-primary-hover: var(--color-teal-600);
+            --color-border: rgba(94, 82, 64, 0.2);
+            --color-surface: rgba(255, 255, 253, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--color-bg-primary);
+            color: var(--color-text-primary);
+            line-height: 1.6;
+        }
+
+        body {
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--color-border);
+            padding-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 28px;
+            color: var(--color-slate-900);
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: var(--color-text-secondary);
+            font-size: 14px;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .card h2 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: var(--color-slate-900);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--color-slate-900);
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            font-size: 13px;
+            background: white;
+            color: var(--color-text-primary);
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(33, 128, 141, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--color-primary-hover);
+        }
+
+        .btn-primary:disabled {
+            background: var(--color-gray-300);
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: rgba(94, 82, 64, 0.12);
+            color: var(--color-text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(94, 82, 64, 0.2);
+        }
+
+        .result-box {
+            background: linear-gradient(135deg, rgba(33, 128, 141, 0.08), rgba(33, 128, 141, 0.04));
+            border-left: 4px solid var(--color-primary);
+            padding: 18px;
+            border-radius: 6px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .result-box.visible {
+            display: block;
+        }
+
+        .result-box h3 {
+            font-size: 13px;
+            color: var(--color-text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .result-box .classification {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--color-primary);
+            margin-bottom: 12px;
+        }
+
+        .result-box .details {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            line-height: 1.8;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            margin-top: 15px;
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            background: white;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .table-wrapper {
+            margin-top: 40px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        thead {
+            background: rgba(94, 82, 64, 0.08);
+        }
+
+        th {
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 500;
+            color: var(--color-slate-900);
+            border-bottom: 2px solid var(--color-border);
+        }
+
+        td {
+            padding: 12px 8px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        tr:hover {
+            background: rgba(94, 82, 64, 0.04);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn-sm {
+            padding: 6px 10px;
+            font-size: 11px;
+            border: 1px solid var(--color-border);
+            background: white;
+            color: var(--color-text-primary);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-sm:hover {
+            background: rgba(94, 82, 64, 0.1);
+        }
+
+        .btn-delete {
+            color: var(--color-red-500);
+        }
+
+        .btn-delete:hover {
+            background: rgba(192, 21, 47, 0.08);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .badge-selected {
+            background: rgba(33, 128, 141, 0.15);
+            color: var(--color-primary);
+        }
+
+        .badge-adequate {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+        }
+
+        .badge-tolerable {
+            background: rgba(234, 179, 8, 0.15);
+            color: #eab308;
+        }
+
+        .badge-marginal {
+            background: rgba(168, 75, 47, 0.15);
+            color: var(--color-orange-500);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--color-text-secondary);
+        }
+
+        .empty-state p {
+            font-size: 14px;
+        }
+
+        .info-text {
+            background: rgba(33, 128, 141, 0.05);
+            border-left: 3px solid var(--color-primary);
+            padding: 12px 15px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>⚙️ Clasificador de Suelos PG-3</h1>
+        <p class="subtitle">Normativa de Carreteras - Sistema Español</p>
+    </header>
+
+    <div class="container">
+        <!-- ENTRADA DE DATOS -->
+        <div class="card">
+            <h2>📋 Datos del Suelo</h2>
+            
+            <div class="info-text">
+                Introduce los parámetros del suelo. Se evaluarán ambos métodos y se asignará la clasificación del peor resultado.
+            </div>
+
+            <form id="suelo-form">
+                <div class="form-group">
+                    <label for="nombre">Nombre del Suelo</label>
+                    <input type="text" id="nombre" placeholder="ej: Suelo A, Muestra 1" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Parámetros de Plasticidad</label>
+                    <div class="form-row">
+                        <div>
+                            <label for="ll">LL (Límite Líquido %)</label>
+                            <input type="number" id="ll" placeholder="0" step="0.1" required>
+                        </div>
+                        <div>
+                            <label for="lp">LP (Límite Plástico %)</label>
+                            <input type="number" id="lp" placeholder="0" step="0.1" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="ip">IP (Índice Plasticidad %) - Calculado: LL - LP</label>
+                    <input type="number" id="ip" placeholder="Calculado automáticamente" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label for="mo">MO (Materia Orgánica %)</label>
+                    <input type="number" id="mo" placeholder="0" step="0.1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="ss">SS (Sales Solubles %)</label>
+                    <input type="number" id="ss" placeholder="0" step="0.1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="finos">Finos (# 0,080 %)</label>
+                    <input type="number" id="finos" placeholder="0" step="0.1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="cbr">CBR</label>
+                    <input type="number" id="cbr" placeholder="0" step="0.1" required>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" class="btn-primary">Clasificar Suelo</button>
+                    <button type="reset" class="btn-secondary">Limpiar</button>
+                </div>
+
+                <div id="resultado" class="result-box">
+                    <h3>Clasificación</h3>
+                    <div class="classification" id="classResult">—</div>
+                    <div class="details" id="classDetails"></div>
+                </div>
+            </form>
+        </div>
+
+        <!-- GRÁFICA DE CASAGRANDE -->
+        <div class="card">
+            <h2>📊 Gráfica de Casagrande (PG-3)</h2>
+            <div class="chart-container">
+                <canvas id="grafica"></canvas>
+            </div>
+            <p style="font-size: 11px; color: var(--color-text-secondary); margin-top: 12px; text-align: center;">
+                Los puntos se marcan según LL e IP introducidos
+            </p>
+        </div>
+    </div>
+
+    <!-- TABLA DE HISTÓRICO -->
+    <div class="table-wrapper">
+        <h2 style="margin-bottom: 20px; color: var(--color-slate-900);">📈 Histórico de Clasificaciones</h2>
+        <div id="tabla-container">
+            <div class="empty-state">
+                <p>No hay suelos clasificados aún. Introduce los datos y haz clic en "Clasificar Suelo".</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let suelos = [];
+        let suloActual = null;
+
+        const form = document.getElementById('suelo-form');
+        const canvas = document.getElementById('grafica');
+        const ctx = canvas.getContext('2d');
+
+        // Ajustar tamaño del canvas
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.offsetWidth;
+            canvas.height = container.offsetHeight;
+            dibujarGrafica();
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Calcular IP automáticamente
+        const llInput = document.getElementById('ll');
+        const lpInput = document.getElementById('lp');
+        const ipInput = document.getElementById('ip');
+
+        function calcularIP() {
+            const ll = parseFloat(llInput.value) || 0;
+            const lp = parseFloat(lpInput.value) || 0;
+            const ip = ll - lp;
+            ipInput.value = ip >= 0 ? ip.toFixed(1) : '0';
+            dibujarGrafica();
+        }
+
+        llInput.addEventListener('input', calcularIP);
+        lpInput.addEventListener('input', calcularIP);
+
+        // Clasificación según PG-3
+        function clasificarSuelo(ll, lp, ip, mo, ss, finos, cbr) {
+            const limites = {
+                seleccionado: { mo: 0.2, ss: 0.2, finos: 25, ll: 30, ip: 10 },
+                adecuado: { mo: 1, ss: 0.2, finos: 35, ll: 40, ip: 4 },
+                tolerable: { mo: 2, ss: 1, finos: 50, ll: 65, ip: undefined },
+                marginal: { mo: 5, ss: undefined, finos: 50, ll: 90, ip: undefined },
+            };
+
+            // Método 1: Tabla de características
+            let clasif1 = 'Inadecuado';
+            
+            if (mo <= limites.seleccionado.mo && ss <= limites.seleccionado.ss && finos <= limites.seleccionado.finos && ll <= limites.seleccionado.ll && ip <= limites.seleccionado.ip) {
+                clasif1 = 'Seleccionado';
+            } else if (mo <= limites.adecuado.mo && ss <= limites.adecuado.ss && finos <= limites.adecuado.finos && ll <= limites.adecuado.ll && (ll <= 30 || ip >= 4) && ll <= 40) {
+                clasif1 = 'Adecuado';
+            } else if (mo <= limites.tolerable.mo && ss <= limites.tolerable.ss && finos <= limites.tolerable.finos && ll <= limites.tolerable.ll && (ll <= 40 || ip >= 0.73 * (ll - 20))) {
+                clasif1 = 'Tolerable';
+            } else if (mo <= limites.marginal.mo && ll <= limites.marginal.ll && (ll <= 90 || ip <= 0.73 * (ll - 20))) {
+                clasif1 = 'Marginal';
+            }
+
+            // Método 2: Gráfica de Casagrande
+            let clasif2 = 'Inadecuado';
+            const lineA = 0.73 * (ll - 20);
+            
+            if (ll <= 30 && ip <= 10) {
+                clasif2 = 'Seleccionado';
+            } else if (ll <= 40 && ip <= (lineA > 4 ? lineA : 4) && mo <= 1) {
+                clasif2 = 'Adecuado';
+            } else if (ll <= 65 && ip <= (lineA > 0 ? lineA : 0) && mo <= 2) {
+                clasif2 = 'Tolerable';
+            } else if (ll <= 90 && ip <= (0.73 * (ll - 20)) && mo <= 5) {
+                clasif2 = 'Marginal';
+            }
+
+            // Peor resultado
+            const orden = { 'Seleccionado': 0, 'Adecuado': 1, 'Tolerable': 2, 'Marginal': 3, 'Inadecuado': 4 };
+            const peor = orden[clasif1] >= orden[clasif2] ? clasif1 : clasif2;
+
+            return {
+                clasificacion: peor,
+                metodo1: clasif1,
+                metodo2: clasif2,
+                enLinea: Math.abs(ip - lineA) < 1
+            };
+        }
+
+        // Dibujar gráfica de Casagrande
+        function dibujarGrafica() {
+            const width = canvas.width;
+            const height = canvas.height;
+            const padding = 50;
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, width, height);
+
+            // Ejes
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(padding, height - padding);
+            ctx.lineTo(width - padding, height - padding);
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, height - padding);
+            ctx.stroke();
+
+            // Escalas
+            const maxLL = 100;
+            const maxIP = 80;
+            const scaleX = (width - 2 * padding) / maxLL;
+            const scaleY = (height - 2 * padding) / maxIP;
+
+            // Etiquetas de ejes
+            ctx.fillStyle = '#333';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('LL (Límite Líquido %)', width / 2, height - 10);
+            
+            ctx.save();
+            ctx.translate(15, height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('IP (Índice Plasticidad %)', 0, 0);
+            ctx.restore();
+
+            // Línea A: IP = 0.73(LL - 20)
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            const ll1 = 20, ip1 = 0;
+            const ll2 = 100, ip2 = 0.73 * (100 - 20);
+            ctx.moveTo(padding + ll1 * scaleX, height - padding - ip1 * scaleY);
+            ctx.lineTo(padding + ll2 * scaleX, height - padding - ip2 * scaleY);
+            ctx.stroke();
+
+            // Zonas de colores
+            const zonas = [
+                { name: 'Seleccionados', color: 'rgba(33, 128, 141, 0.15)', ll: [0, 30], ip: [0, 10] },
+                { name: 'Adecuados', color: 'rgba(34, 197, 94, 0.15)', ll: [0, 40], ip: [0, 20] },
+                { name: 'Tolerables', color: 'rgba(234, 179, 8, 0.15)', ll: [0, 65], ip: [0, 50] },
+                { name: 'Marginales', color: 'rgba(168, 75, 47, 0.15)', ll: [0, 90], ip: [0, 73] }
+            ];
+
+            // Graficar punto actual
+            const ll = parseFloat(document.getElementById('ll').value) || 0;
+            const ip = parseFloat(document.getElementById('ip').value) || 0;
+
+            if (ll > 0 && ip >= 0) {
+                ctx.fillStyle = '#d32f2f';
+                ctx.beginPath();
+                ctx.arc(padding + ll * scaleX, height - padding - ip * scaleY, 6, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.strokeStyle = '#8b0000';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            // Líneas de grid
+            ctx.strokeStyle = '#ddd';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 10; i++) {
+                const x = padding + (i * 10) * scaleX;
+                const y = height - padding - (i * 10) * scaleY;
+                ctx.beginPath();
+                ctx.moveTo(x, height - padding);
+                ctx.lineTo(x, height - padding + 5);
+                ctx.stroke();
+                ctx.fillStyle = '#666';
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(i * 10, x, height - padding + 20);
+                
+                if (i <= 8) {
+                    ctx.beginPath();
+                    ctx.moveTo(padding, y);
+                    ctx.lineTo(padding - 5, y);
+                    ctx.stroke();
+                    ctx.textAlign = 'right';
+                    ctx.fillText(i * 10, padding - 10, y + 4);
+                }
+            }
+        }
+
+        // Envío del formulario
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const nombre = document.getElementById('nombre').value;
+            const ll = parseFloat(document.getElementById('ll').value);
+            const lp = parseFloat(document.getElementById('lp').value);
+            const ip = parseFloat(document.getElementById('ip').value);
+            const mo = parseFloat(document.getElementById('mo').value);
+            const ss = parseFloat(document.getElementById('ss').value);
+            const finos = parseFloat(document.getElementById('finos').value);
+            const cbr = parseFloat(document.getElementById('cbr').value);
+
+            const resultado = clasificarSuelo(ll, lp, ip, mo, ss, finos, cbr);
+            
+            const suelo = {
+                id: Date.now(),
+                nombre,
+                ll, lp, ip, mo, ss, finos, cbr,
+                clasificacion: resultado.clasificacion,
+                fecha: new Date().toLocaleString('es-ES')
+            };
+
+            suelos.unshift(suelo);
+            suloActual = suelo;
+
+            // Mostrar resultado
+            document.getElementById('classResult').textContent = resultado.clasificacion;
+            document.getElementById('classDetails').innerHTML = `
+                <div>Método 1 (Tabla): <strong>${resultado.metodo1}</strong></div>
+                <div>Método 2 (Gráfica): <strong>${resultado.metodo2}</strong></div>
+                <div style="margin-top: 8px; border-top: 1px solid rgba(33, 128, 141, 0.2); padding-top: 8px;">
+                    <strong>Peor resultado (clasificación final):</strong> ${resultado.clasificacion}
+                </div>
+            `;
+            document.getElementById('resultado').classList.add('visible');
+
+            actualizarTabla();
+            dibujarGrafica();
+        });
+
+        function actualizarTabla() {
+            const container = document.getElementById('tabla-container');
+
+            if (suelos.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>No hay suelos clasificados aún.</p></div>';
+                return;
+            }
+
+            let html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>LL</th>
+                            <th>LP</th>
+                            <th>IP</th>
+                            <th>MO</th>
+                            <th>SS</th>
+                            <th>Finos</th>
+                            <th>CBR</th>
+                            <th>Clasificación</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            suelos.forEach(suelo => {
+                const badge = `badge-${suelo.clasificacion.toLowerCase()}`;
+                html += `
+                    <tr>
+                        <td><strong>${suelo.nombre}</strong></td>
+                        <td>${suelo.ll}</td>
+                        <td>${suelo.lp}</td>
+                        <td>${suelo.ip}</td>
+                        <td>${suelo.mo}</td>
+                        <td>${suelo.ss}</td>
+                        <td>${suelo.finos}</td>
+                        <td>${suelo.cbr}</td>
+                        <td><span class="badge ${badge}">${suelo.clasificacion}</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-sm" onclick="copiarSuelo(${suelo.id})" title="Copiar">📋</button>
+                                <button class="btn-sm" onclick="editarSuelo(${suelo.id})" title="Editar">✏️</button>
+                                <button class="btn-sm btn-delete" onclick="eliminarSuelo(${suelo.id})" title="Eliminar">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function copiarSuelo(id) {
+            const suelo = suelos.find(s => s.id === id);
+            if (suelo) {
+                document.getElementById('nombre').value = suelo.nombre + ' (copia)';
+                document.getElementById('ll').value = suelo.ll;
+                document.getElementById('lp').value = suelo.lp;
+                document.getElementById('mo').value = suelo.mo;
+                document.getElementById('ss').value = suelo.ss;
+                document.getElementById('finos').value = suelo.finos;
+                document.getElementById('cbr').value = suelo.cbr;
+                calcularIP();
+                window.scrollTo({top: 0, behavior: 'smooth'});
+            }
+        }
+
+        function editarSuelo(id) {
+            const suelo = suelos.find(s => s.id === id);
+            if (suelo) {
+                document.getElementById('nombre').value = suelo.nombre;
+                document.getElementById('ll').value = suelo.ll;
+                document.getElementById('lp').value = suelo.lp;
+                document.getElementById('mo').value = suelo.mo;
+                document.getElementById('ss').value = suelo.ss;
+                document.getElementById('finos').value = suelo.finos;
+                document.getElementById('cbr').value = suelo.cbr;
+                suloActual = suelo;
+                calcularIP();
+                eliminarSuelo(id);
+                window.scrollTo({top: 0, behavior: 'smooth'});
+            }
+        }
+
+        function eliminarSuelo(id) {
+            suelos = suelos.filter(s => s.id !== id);
+            actualizarTabla();
+            document.getElementById('resultado').classList.remove('visible');
+        }
+
+        actualizarTabla();
+    </script>
+</body>
+</html>
